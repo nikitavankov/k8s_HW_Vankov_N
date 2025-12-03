@@ -14,10 +14,10 @@
 
 4. Получить NodePort для доступа:
    kubectl get svc -n webapp-demo webapp-service
-# Шаг 4A: Получить NodePort (он будет 30080, как указано в манифесте)
+Шаг 4A: Получить NodePort (он будет 30080, как указано в манифесте)
 kubectl get svc -n webapp-demo webapp-service
 
-# Шаг 4B: Получить внешний IP-адрес одной из нод кластера
+Шаг 4B: Получить внешний IP-адрес одной из нод кластера
 kubectl get nodes -o wide
 
 5. Доступ к приложению:
