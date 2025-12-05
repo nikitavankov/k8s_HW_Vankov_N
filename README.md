@@ -6,12 +6,12 @@
 kubectl apply -f deploy/namespace.yml
 
 # 2. Создаем ConfigMaps (они не зависят от других ресурсов)
-kubectl apply -f deploy/mongo-configmap.yml
-kubectl apply -f deploy/webapp-configmap.yml
+2.1 kubectl apply -f deploy/mongo-configmap.yml
+2.2 kubectl apply -f deploy/webapp-configmap.yml
 
 # 3. Создаем Secrets (пароли и чувствительные данные)
-kubectl apply -f deploy/mongo-secret.yml
-kubectl apply -f deploy/webapp-secret.yml
+3.1 kubectl apply -f deploy/mongo-secret.yml
+3.2 kubectl apply -f deploy/webapp-secret.yml
 
 # 4. Запускаем MongoDB Deployment (база данных должна запуститься первой)
 kubectl apply -f deploy/mongo-deployment.yml
