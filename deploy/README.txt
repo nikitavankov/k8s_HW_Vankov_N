@@ -1,27 +1,30 @@
+# k8s_HW_Vankov_N
+
 ИНСТРУКЦИЯ ПО РАЗВЕРТЫВАНИЮ:
 
-1. Развернуть все компоненты:
-   kubectl apply -f deploy/
+# 1. Сначала создаем Namespace (основа всего)
+kubectl apply -f deploy/namespace.yml
 
-2. Проверить созданные ресурсы:
-   kubectl get all -n webapp-demo
-   Убедитесь, что все Pod'ы перешли в состояние Running, а Service — Available.
+# 2. Создаем ConfigMaps (они не зависят от других ресурсов)
+2.1 kubectl apply -f deploy/mongo-configmap.yml
+2.2 kubectl apply -f deploy/webapp-configmap.yml
 
-3. Проверить логи приложения:
-   kubectl logs -n webapp-demo deployment/webapp -f
+# 3. Создаем Secrets (пароли и чувствительные данные)
+3.1 kubectl apply -f deploy/mongo-secret.yml
+3.2 kubectl apply -f deploy/webapp-secret.yml
 
-4. Получить NodePort для доступа:
-   kubectl get svc -n webapp-demo webapp-service
-# Шаг 4A: Получить NodePort (он будет 30080, как указано в манифесте)
-kubectl get svc -n webapp-demo webapp-service
+# 4. Запускаем MongoDB Deployment (база данных должна запуститься первой)
+kubectl apply -f deploy/mongo-deployment.yml
 
-# Шаг 4B: Получить внешний IP-адрес одной из нод кластера
-kubectl get nodes -o wide
+# 5. Создаем Service для MongoDB (чтобы веб-приложение могло подключиться)
+kubectl apply -f deploy/mongo-service.yml
 
-5. Доступ к приложению:
+# 6. Запускаем веб-приложение (mongo-express)
+kubectl apply -f deploy/webapp-deployment.yml
 
-Веб-интерфейс MongoDB (mongo-express): Откройте в браузере: http://<NODE_IP>:30080
-Данные для аутентификации:
-Логин: admin
-Пароль: admin123
-MongoDB доступна внутри кластера по адресу: mongodb.webapp-demo.svc.cluster.local:27017
+# 7. Создаем Service для веб-приложения (NodePort)
+kubectl apply -f deploy/webapp-service.yml
+
+
+#8. Открываем порт
+kubectl port-forward -n webapp-demo svc/webapp-service 8080:80 --address='0.0.0.0'
