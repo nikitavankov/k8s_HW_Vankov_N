@@ -16,40 +16,42 @@ spec:
       initContainers:
       - name: wait-for-mongo
         image: busybox:1.35
-        command: ['sh', '-c', 'echo "Waiting for MongoDB to be ready..."; sleep 15; until nc -z mongodb 27017; do echo "Waiting..."; sleep 5; done; echo "MongoDB is ready!"']
+        command: ['sh', '-c', 'until nc -z mongodb 27017; do echo "Waiting for MongoDB..."; sleep 2; done']
       containers:
       - name: webapp
-        image: mongo-express:latest  # Используем latest
+        image: mongo-express:latest
         ports:
         - containerPort: 8081
         env:
         - name: ME_CONFIG_MONGODB_URL
-          value: "mongodb://admin:password123@mongodb:27017/tasksdb?authSource=admin"
+          valueFrom:
+            secretKeyRef:
+              name: webapp-secret
+              key: mongodb-uri
         - name: ME_CONFIG_BASICAUTH_USERNAME
           value: "admin"
         - name: ME_CONFIG_BASICAUTH_PASSWORD
           value: "admin123"
         - name: ME_CONFIG_BASICAUTH
-          value: "false"  # Отключаем аутентификацию для проб
-        # Упрощенные пробы для Астра Linux
+          value: "false"
         livenessProbe:
           httpGet:
             path: /
             port: 8081
-          initialDelaySeconds: 60  # Даем больше времени на запуск
-          periodSeconds: 15
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
           timeoutSeconds: 5
+          failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /
             port: 8081
-          initialDelaySeconds: 30
-          periodSeconds: 10
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 5
           timeoutSeconds: 3
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
+          failureThreshold: 3
         volumeMounts:
         - name: webapp-data
           mountPath: /tmp
