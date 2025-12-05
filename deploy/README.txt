@@ -26,5 +26,6 @@ kubectl apply -f deploy/webapp-deployment.yml
 kubectl apply -f deploy/webapp-service.yml
 
 
-#8. Открываем порт
+# 8. Открываем порт
 kubectl port-forward -n webapp-demo svc/webapp-service 8080:80 --address='0.0.0.0'
+
