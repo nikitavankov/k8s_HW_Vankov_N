@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp
+  namespace: webapp-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+      - name: webapp
+        image: mongo-express:latest
+        ports:
+        - containerPort: 8081
+        env:
+        - name: ME_CONFIG_MONGODB_URL
+          valueFrom:
+            secretKeyRef:
+              name: webapp-secret
+              key: mongodb-uri
+        - name: ME_CONFIG_BASICAUTH_USERNAME
+          value: "admin"
+        - name: ME_CONFIG_BASICAUTH_PASSWORD
+          value: "admin123"
+        # Отключаем пробы на первое время или увеличиваем таймауты
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8081
+          initialDelaySeconds: 90  # Увеличиваем до 90 секунд
+          periodSeconds: 10
+          failureThreshold: 3
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8081
+          initialDelaySeconds: 60  # Увеличиваем до 60 секунд
+          periodSeconds: 5
+          failureThreshold: 3
+          timeoutSeconds: 3
+        volumeMounts:
+        - name: webapp-data
+          mountPath: /tmp
+      volumes:
+      - name: webapp-data
+        emptyDir: {}
