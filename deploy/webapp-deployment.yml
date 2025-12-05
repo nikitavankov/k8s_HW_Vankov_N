@@ -13,13 +13,18 @@ spec:
       labels:
         app: webapp
     spec:
+      # Добавим securityContext для Астра Linux
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       initContainers:
       - name: wait-for-mongo
         image: busybox:1.35
-        command: ['sh', '-c', 'until nc -z mongodb 27017; do echo "Waiting for MongoDB..."; sleep 2; done']
+        command: ['sh', '-c', 'sleep 20; until nc -z mongodb 27017; do echo "Waiting for MongoDB..."; sleep 5; done']
       containers:
       - name: webapp
-        image: mongo-express:latest
+        image: mongo-express:1.0.2-alpine3.18
         ports:
         - containerPort: 8081
         env:
@@ -32,26 +37,37 @@ spec:
           value: "admin"
         - name: ME_CONFIG_BASICAUTH_PASSWORD
           value: "admin123"
+        # Отключаем аутентификацию для health checks
         - name: ME_CONFIG_BASICAUTH
           value: "false"
+        # Увеличиваем все таймауты для Астра Linux
         livenessProbe:
           httpGet:
             path: /
             port: 8081
             scheme: HTTP
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
+          initialDelaySeconds: 120  # Большая задержка для Астра
+          periodSeconds: 20
+          timeoutSeconds: 10
+          failureThreshold: 5
+          successThreshold: 1
         readinessProbe:
           httpGet:
             path: /
             port: 8081
             scheme: HTTP
-          initialDelaySeconds: 10
-          periodSeconds: 5
-          timeoutSeconds: 3
-          failureThreshold: 3
+          initialDelaySeconds: 60
+          periodSeconds: 15
+          timeoutSeconds: 8
+          failureThreshold: 5
+          successThreshold: 1
+        resources:
+          requests:
+            memory: "512Mi"  # Больше памяти для Астра
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
         volumeMounts:
         - name: webapp-data
           mountPath: /tmp
