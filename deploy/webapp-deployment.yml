@@ -13,6 +13,10 @@ spec:
       labels:
         app: webapp
     spec:
+      initContainers:
+      - name: wait-for-mongo
+        image: busybox:1.35
+        command: ['sh', '-c', 'until nc -z mongodb 27017; do echo "Waiting for MongoDB..."; sleep 2; done']
       containers:
       - name: webapp
         image: mongo-express:latest
@@ -28,23 +32,26 @@ spec:
           value: "admin"
         - name: ME_CONFIG_BASICAUTH_PASSWORD
           value: "admin123"
-        # Отключаем пробы на первое время или увеличиваем таймауты
+        - name: ME_CONFIG_BASICAUTH
+          value: "false"
         livenessProbe:
           httpGet:
             path: /
             port: 8081
-          initialDelaySeconds: 90  # Увеличиваем до 90 секунд
+            scheme: HTTP
+          initialDelaySeconds: 30
           periodSeconds: 10
-          failureThreshold: 3
           timeoutSeconds: 5
+          failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /
             port: 8081
-          initialDelaySeconds: 60  # Увеличиваем до 60 секунд
+            scheme: HTTP
+          initialDelaySeconds: 10
           periodSeconds: 5
-          failureThreshold: 3
           timeoutSeconds: 3
+          failureThreshold: 3
         volumeMounts:
         - name: webapp-data
           mountPath: /tmp
