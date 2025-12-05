@@ -39,4 +39,5 @@ spec:
           mountPath: /data/db
       volumes:
       - name: mongodb-data
+
         emptyDir: {}
