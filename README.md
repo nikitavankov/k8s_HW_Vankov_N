@@ -24,3 +24,6 @@ kubectl apply -f deploy/webapp-deployment.yml
 
 # 7. Создаем Service для веб-приложения (NodePort)
 kubectl apply -f deploy/webapp-service.yml
+
+
+kubectl port-forward -n webapp-demo svc/webapp-service 8080:80 --address='0.0.0.0'
