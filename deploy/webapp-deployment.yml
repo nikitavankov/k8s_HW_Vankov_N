@@ -13,61 +13,43 @@ spec:
       labels:
         app: webapp
     spec:
-      # Добавим securityContext для Астра Linux
-      securityContext:
-        runAsUser: 1000
-        runAsGroup: 1000
-        fsGroup: 1000
       initContainers:
       - name: wait-for-mongo
         image: busybox:1.35
-        command: ['sh', '-c', 'sleep 20; until nc -z mongodb 27017; do echo "Waiting for MongoDB..."; sleep 5; done']
+        command: ['sh', '-c', 'echo "Waiting for MongoDB to be ready..."; sleep 15; until nc -z mongodb 27017; do echo "Waiting..."; sleep 5; done; echo "MongoDB is ready!"']
       containers:
       - name: webapp
-        image: mongo-express:1.0.2-alpine3.18
+        image: mongo-express:latest  # Используем latest
         ports:
         - containerPort: 8081
         env:
         - name: ME_CONFIG_MONGODB_URL
-          valueFrom:
-            secretKeyRef:
-              name: webapp-secret
-              key: mongodb-uri
+          value: "mongodb://admin:password123@mongodb:27017/tasksdb?authSource=admin"
         - name: ME_CONFIG_BASICAUTH_USERNAME
           value: "admin"
         - name: ME_CONFIG_BASICAUTH_PASSWORD
           value: "admin123"
-        # Отключаем аутентификацию для health checks
         - name: ME_CONFIG_BASICAUTH
-          value: "false"
-        # Увеличиваем все таймауты для Астра Linux
+          value: "false"  # Отключаем аутентификацию для проб
+        # Упрощенные пробы для Астра Linux
         livenessProbe:
           httpGet:
             path: /
             port: 8081
-            scheme: HTTP
-          initialDelaySeconds: 120  # Большая задержка для Астра
-          periodSeconds: 20
-          timeoutSeconds: 10
-          failureThreshold: 5
-          successThreshold: 1
+          initialDelaySeconds: 60  # Даем больше времени на запуск
+          periodSeconds: 15
+          timeoutSeconds: 5
         readinessProbe:
           httpGet:
             path: /
             port: 8081
-            scheme: HTTP
-          initialDelaySeconds: 60
-          periodSeconds: 15
-          timeoutSeconds: 8
-          failureThreshold: 5
-          successThreshold: 1
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 3
         resources:
           requests:
-            memory: "512Mi"  # Больше памяти для Астра
-            cpu: "500m"
-          limits:
-            memory: "1Gi"
-            cpu: "1"
+            memory: "256Mi"
+            cpu: "250m"
         volumeMounts:
         - name: webapp-data
           mountPath: /tmp
