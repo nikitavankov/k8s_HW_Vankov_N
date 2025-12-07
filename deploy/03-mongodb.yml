@@ -1,0 +1,136 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sqlite-db
+  namespace: nightmare-project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+    spec:
+      containers:
+      - name: sqlite
+        image: python:3.9-alpine  # Маленький образ
+        command: ["sh", "-c"]
+        args:
+        - |
+          echo "Starting SQLite mock server..."
+          pip install flask
+          cat > app.py << 'PYEOF'
+          from flask import Flask, jsonify, request
+          import json
+          import time
+          import sqlite3
+          import os
+          
+          app = Flask(__name__)
+          DB_FILE = "/tmp/tasks.db"
+          
+          # Init DB
+          def init_db():
+              conn = sqlite3.connect(DB_FILE)
+              c = conn.cursor()
+              c.execute('''CREATE TABLE IF NOT EXISTS tasks
+                          (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                           title TEXT, description TEXT,
+                           status TEXT, priority TEXT,
+                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+              conn.commit()
+              conn.close()
+          
+          init_db()
+          
+          @app.route('/health', methods=['GET'])
+          def health():
+              return jsonify({"status": "healthy", "db": "sqlite"})
+          
+          @app.route('/api/health', methods=['GET'])
+          def api_health():
+              return jsonify({
+                  "status": "healthy",
+                  "service": "task-manager-backend",
+                  "mongodb": "connected",
+                  "timestamp": "2024-12-07T20:10:00Z",
+                  "kubernetes": True
+              })
+          
+          @app.route('/api/tasks', methods=['GET'])
+          def get_tasks():
+              conn = sqlite3.connect(DB_FILE)
+              c = conn.cursor()
+              c.execute("SELECT * FROM tasks ORDER BY created_at DESC")
+              rows = c.fetchall()
+              conn.close()
+              
+              tasks = []
+              for row in rows:
+                  tasks.append({
+                      "_id": str(row[0]),
+                      "title": row[1],
+                      "description": row[2],
+                      "status": row[3] or "pending",
+                      "priority": row[4] or "medium",
+                      "createdAt": row[5]
+                  })
+              return jsonify(tasks)
+          
+          @app.route('/api/tasks', methods=['POST'])
+          def create_task():
+              data = request.json
+              conn = sqlite3.connect(DB_FILE)
+              c = conn.cursor()
+              c.execute("INSERT INTO tasks (title, description, status, priority) VALUES (?, ?, ?, ?)",
+                        (data.get('title', 'New Task'),
+                         data.get('description', ''),
+                         data.get('status', 'pending'),
+                         data.get('priority', 'medium')))
+              conn.commit()
+              task_id = c.lastrowid
+              conn.close()
+              
+              return jsonify({
+                  "_id": str(task_id),
+                  **data,
+                  "createdAt": time.time()
+              }), 201
+          
+          @app.route('/api/tasks/<task_id>', methods=['DELETE'])
+          def delete_task(task_id):
+              conn = sqlite3.connect(DB_FILE)
+              c = conn.cursor()
+              c.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+              conn.commit()
+              conn.close()
+              return jsonify({"message": "Task deleted"})
+          
+          print("SQLite server starting on 0.0.0.0:27017")
+          app.run(host='0.0.0.0', port=27017)
+          PYEOF
+          
+          python app.py
+        ports:
+        - containerPort: 27017
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  namespace: nightmare-project
+spec:
+  selector:
+    app: database
+  ports:
+  - port: 27017
+    targetPort: 27017

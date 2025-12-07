@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongo-config
+  namespace: nightmare-project
+data:
+  mongodb-database: "taskmanager"
+  mongodb-username: "admin"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: nightmare-project
+data:
+  app-name: "MERN Task Manager"
+  app-version: "1.0.0"
+  backend-port: "5000"
+  frontend-port: "80"
