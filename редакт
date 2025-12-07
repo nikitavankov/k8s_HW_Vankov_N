@@ -1,0 +1,11 @@
+deploy/
+├── 00-namespace.yml
+├── 01-configmaps.yml
+├── 02-secrets.yml
+├── 03-traefik-controller.yml    # ← НОВЫЙ ФАЙЛ (добавьте!)
+├── 04-sqlite.yml                # переименуйте из 03-sqlite.yml
+├── 05-backend-service.yml       # переименуйте из 04-backend-service.yml
+├── 06-frontend.yml
+├── 07-traefik-ingress.yml       # переименуйте из 07-traefik.yml
+├── 08-nodeport.yml
+└── 09-network-policy.yml        # переименуйте из 05-network-policy.yml
