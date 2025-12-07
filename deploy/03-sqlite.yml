@@ -69,7 +69,7 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 30
       
-      # ????????? 2: Backend API
+      # ????????? 2: Backend API (? ??????????? DELETE!)
       - name: backend
         image: python:3.9-alpine
         env:
@@ -172,6 +172,31 @@ spec:
                   }), 201
               except Exception as e:
                   return jsonify({"error": str(e)}), 500
+          
+          @app.route('/api/tasks/<int:task_id>', methods=['DELETE'])
+          def delete_task(task_id):
+              try:
+                  conn = get_db_connection()
+                  cursor = conn.cursor()
+                  cursor.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+                  conn.commit()
+                  deleted = cursor.rowcount > 0
+                  conn.close()
+                  
+                  if deleted:
+                      return jsonify({
+                          "status": "success",
+                          "message": "Task deleted successfully"
+                      })
+                  else:
+                      return jsonify({
+                          "error": "Task not found"
+                      }), 404
+              except Exception as e:
+                  return jsonify({
+                      "status": "error",
+                      "message": str(e)
+                  }), 500
           
           if __name__ == '__main__':
               print(f"Starting MEBN Backend with database: {DB_FILE}")
