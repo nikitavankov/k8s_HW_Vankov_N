@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sqlite-db
+  namespace: nightmare-project
+  labels:
+    app: sqlite-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sqlite-db
+  template:
+    metadata:
+      labels:
+        app: sqlite-db
+    spec:
+      containers:
+      - name: sqlite
+        image: python:3.9-alpine
+        command: ["sh", "-c"]
+        args:
+        - |
+          echo "=== SQLITE DATABASE INITIALIZATION ==="
+          echo "Installing sqlite..."
+          apk add --no-cache sqlite
+          
+          echo "Creating /data directory..."
+          mkdir -p /data
+          
+          echo "Creating SQLite database..."
+          sqlite3 /data/tasks.db "
+          CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT,
+            status TEXT DEFAULT 'pending',
+            priority TEXT DEFAULT 'medium',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
+          
+          INSERT OR IGNORE INTO tasks (title, description, status, priority) VALUES
+          ('Kubernetes Deployment', 'MEBN Stack on K8s', 'completed', 'high'),
+          ('Backend API', 'Python Flask with SQLite', 'in progress', 'high'),
+          ('Frontend UI', 'Nginx web interface', 'pending', 'medium');
+          "
+          
+          echo "=== DATABASE VERIFICATION ==="
+          echo "Database location: /data/tasks.db"
+          echo "Size: $(du -h /data/tasks.db | cut -f1)"
+          echo ""
+          echo "Tables in database:"
+          sqlite3 /data/tasks.db ".tables"
+          echo ""
+          echo "Sample data:"
+          sqlite3 /data/tasks.db "SELECT id, title, status, priority FROM tasks;"
+          echo ""
+          echo "=== KEEPING CONTAINER ALIVE ==="
+          echo "Database is ready. Keeping container running..."
+          
+          # Простая проверка доступности файла каждые 30 секунд
+          while true; do
+            echo "[$(date)] Database file exists: $(ls -la /data/tasks.db 2>/dev/null | wc -l)"
+            sleep 30
+          done
+        volumeMounts:
+        - name: database-storage
+          mountPath: /data
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - test -f /data/tasks.db && sqlite3 /data/tasks.db "SELECT 1;" > /dev/null
+          initialDelaySeconds: 10
+          periodSeconds: 30
+      volumes:
+      - name: database-storage
+        emptyDir: {}
