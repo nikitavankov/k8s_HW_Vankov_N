@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: nightmare-project
-  labels:
-    name: nightmare-project
-    environment: production
-    project: mern-task-manager
