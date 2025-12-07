@@ -9,3 +9,48 @@ deploy/
 ├── 07-traefik-ingress.yml       # переименуйте из 07-traefik.yml
 ├── 08-nodeport.yml
 └── 09-network-policy.yml        # переименуйте из 05-network-policy.yml
+
+
+ШАГ 4: Проверка работоспособности
+После запуска проверьте:
+
+bash
+# 1. Проверка всех компонентов
+kubectl get all -n nightmare-project
+
+# 2. Проверка Traefik
+kubectl get svc -n kube-system traefik
+# Получите EXTERNAL-IP или используйте NodePort
+
+# 3. Проверка логов
+kubectl logs -n nightmare-project deployment/sqlite-backend -c backend
+
+# 4. Проверка базы данных
+kubectl exec -n nightmare-project deployment/sqlite-backend -c sqlite -- ls -la /data/
+
+# 5. Тест через port-forward
+kubectl port-forward -n nightmare-project svc/frontend 8080:80 &
+# Откройте http://localhost:8080
+ШАГ 5: Доступ к приложению
+Вариант A: Через NodePort (проще)
+
+bash
+# Получите IP ноды
+kubectl get nodes -o wide
+
+# Откройте в браузере:
+# http://<node-ip>:30080
+Вариант B: Через Ingress (Traefik)
+
+bash
+# Получите IP Traefik сервиса
+kubectl get svc -n kube-system traefik
+
+# Если тип LoadBalancer, используйте EXTERNAL-IP
+# Если тип NodePort, используйте IP ноды и порт из NodePort
+
+# Добавьте в /etc/hosts:
+# <traefik-ip> mebn-task-manager.local
+
+# Откройте:
+# http://mebn-task-manager.local
