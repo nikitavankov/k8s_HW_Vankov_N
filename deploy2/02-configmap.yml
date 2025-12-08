@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: todo-app-config
+  namespace: todo-app
+data:
+  MONGODB_URI: "mongodb://todo-mongodb:27017/todos"
+  APP_PORT: "3000"
+  NODE_ENV: "production"
