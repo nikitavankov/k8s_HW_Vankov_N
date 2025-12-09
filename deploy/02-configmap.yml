@@ -4,7 +4,6 @@ metadata:
   name: app-config
   namespace: task-board
 data:
-  # ПРАВИЛЬНОЕ имя переменной!
   MONGODB_URI: "mongodb://mongodb-service:27017/TodoApp"
   PORT: "3000"
   REACT_APP_API_URL: "http://backend-service:3000"
