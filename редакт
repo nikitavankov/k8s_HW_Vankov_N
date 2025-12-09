@@ -1,7 +1,0 @@
-kubectl apply -f 01-namespace.yml
-kubectl apply -f 02-configmap.yml
-kubectl apply -f 03-secret.yml
-kubectl apply -f 04-mongodb-service.yml
-kubectl apply -f 05-mongodb-deployment.yml
-kubectl apply -f 06-webapp-service.yml
-kubectl apply -f 07-webapp-deployment.yml
