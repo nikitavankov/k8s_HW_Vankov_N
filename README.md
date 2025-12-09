@@ -51,15 +51,15 @@ echo "Откройте в браузере: http://$NODE_IP:$NODE_PORT"
 
 
 Приложение использует следующие предварительно собранные образы:
-Frontend
-Репозиторий: nikitavankov/react-express-mongodb-frontend
-Доступ: Публичный (чтение, запись, удаление)
 
-Backend
-Репозиторий: nikitavankov/react-express-mongodb-backend
-Доступ: Публичный (чтение, запись, удаление)
+Frontend образ: nikitavankov/react-express-mongodb-frontend
+
+
+Backend образ: nikitavankov/react-express-mongodb-backend
+
 
 Основа проекта
+
 Исходный код приложения и Docker конфигурация основаны на примере из репозитория:
 https://github.com/docker/awesome-compose/tree/master/react-express-mongodb
 
