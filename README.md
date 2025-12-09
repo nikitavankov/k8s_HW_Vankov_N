@@ -5,7 +5,9 @@ Task Manager (React + Express + MongoDB)
 Приложение состоит из трех компонентов:
 
 Frontend: React-приложение
+
 Backend: Express.js сервер
+
 Database: MongoDB
 
 Развертывание в Kubernetes
